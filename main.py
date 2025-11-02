@@ -16,15 +16,10 @@ def extract_text_from_pdf(pdf_name: str) -> str:
 def ask_ollama(text: str, question: str) -> str:
     # Send the PDF text and a user question to the Ollama chat model and return the response
     messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful assistant who reads PDF text and answers questions."
-        },
-        {
-            "role": "user",
-            "content": f"{question}\n\n{text}"
-        }
+        { "role": "system", "content": "You are a helpful assistant who reads PDF text and answers questions."},
+        {"role": "user","content": f"{question}\n\n{text}"}
     ]
+    
     response: ChatResponse = chat(
         # This is the model name you want to use
         model="llama3.2",
@@ -35,9 +30,9 @@ def ask_ollama(text: str, question: str) -> str:
 
 def main():
     # Main function to run the PDF reader and question-answering loop
-    print("----------")
-    print(" PDF-leser")
-    print("----------")
+    print("-"* 10 + "\n")
+    print(" PDF-Reader\n")
+    print("-" * 10 + "\n")
 
     # Prompt user for PDF file name (without .pdf extension)
     pdf_name = input("PDF-file (out the .pdf): ").strip()
@@ -64,6 +59,7 @@ def main():
             # Ask a question about the current PDF
             print("Thinking…")
             response = ask_ollama(pdf_text, question)
+            
             print("\nAnswer from LLaMA:\n")
             print(response)
             print("\n" + "-" * 40)
