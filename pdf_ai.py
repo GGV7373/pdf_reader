@@ -1,72 +1,98 @@
+import os
+import time
 import PyPDF2
 from ollama import chat, ChatResponse
 
 def extract_text_from_pdf(pdf_name: str) -> str:
-    # Extract all text from a PDF file given its name (without .pdf extension)
-    # Returns the extracted text as a single string
-    file_path = f"{pdf_name}.pdf"
-    all_text = ""
-    with open(file_path, "rb") as f:
-        reader = PyPDF2.PdfReader(f)
-        for page in reader.pages:
-            all_text += page.extract_text() or ""
-            all_text += "\n"
-    return all_text
+    """Extract all text from a PDF file."""
+    # Ensure .pdf extension
+    if not pdf_name.lower().endswith(".pdf"):
+        pdf_name += ".pdf"
 
-def ask_ollama(text: str, question: str) -> str:
-    # Send the PDF text and a user question to the Ollama chat model and return the response
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful assistant who reads PDF text and answers questions."
-        },
-        {
-            "role": "user",
-            "content": f"{question}\n\n{text}"
-        }
-    ]
-    response: ChatResponse = chat(
-        # This is the model name you want to use
-        model="llama3.2",
-        messages=messages,
-        stream=False
-    )
-    return response.message.content
+    if not os.path.exists(pdf_name):
+        raise FileNotFoundError(f"Cannot find PDF file: {pdf_name}")
+
+    try:
+        all_text = ""
+        with open(pdf_name, "rb") as f:
+            reader = PyPDF2.PdfReader(f)
+            if not reader.pages:
+                raise ValueError("PDF file appears to be empty")
+            
+            for i, page in enumerate(reader.pages, 1):
+                text = page.extract_text() or ""
+                if text.strip():
+                    all_text += text + "\n"
+                else:
+                    print(f"Warning: Page {i} appears empty or unreadable")
+        
+        if not all_text.strip():
+            raise ValueError("No text could be extracted from the PDF")
+
+        return all_text
+    except PyPDF2.errors.PdfReadError as e:
+        raise ValueError(f"Error reading PDF: {e}")
+    except Exception as e:
+        raise ValueError(f"Unexpected error: {e}")
+
+def ask_ollama(text: str, question: str, max_retries: int = 3, timeout: int = 30) -> str:
+    """Ask Ollama a question about the PDF text."""
+    for attempt in range(max_retries):
+        try:
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant who reads PDF text and answers questions."},
+                {"role": "user", "content": f"{question}\n\n{text}"}
+            ]
+            response: ChatResponse = chat(
+                model="tinyllama",
+                messages=messages,
+                stream=False,
+                options={"timeout": timeout}
+            )
+            return response.message.content
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1} failed. Retrying...")
+                time.sleep(2)
+            else:
+                raise Exception(f"Failed after {max_retries} attempts. Last error: {e}")
 
 def main():
-    # Main function to run the PDF reader and question-answering loop
-    print("----------")
-    print(" PDF-leser")
-    print("----------")
-
-    # Prompt user for PDF file name (without .pdf extension)
-    pdf_name = input("PDF-file (out the .pdf): ").strip()
-    pdf_text = extract_text_from_pdf(pdf_name)
-    print("PDF loding..!\n")
+    print("----------\n PDF Reader\n----------")
 
     while True:
-        # Prompt user for a question or command
-        question = input("Write a question (or 'switch' for new PDF, 'exit' to quit): ").strip()
+        try:
+            pdf_name = input("PDF file (with or without .pdf): ").strip()
+            if not pdf_name:
+                continue
 
-        if question.lower() == "exit":
-            # Exit the program
-            print("Exit....")
-            break
-
-        elif question.lower() == "switch":
-            # Switch to a new PDF file
-            pdf_name = input("New PDF file name (without .pdf): ").strip()
+            print("Loading PDF...")
             pdf_text = extract_text_from_pdf(pdf_name)
-            print("New PDF loaded!\n")
-            continue
+            print(f"Loaded {len(pdf_text.split())} words from PDF\n")
 
-        else:
-            # Ask a question about the current PDF
-            print("Thinking…")
-            response = ask_ollama(pdf_text, question)
-            print("\nAnswer from LLaMA:\n")
-            print(response)
-            print("\n" + "-" * 40)
+            while True:
+                question = input("Question ('switch' for new PDF, 'exit' to quit): ").strip()
+                if not question:
+                    continue
+
+                if question.lower() == "exit":
+                    print("Exiting...")
+                    return
+                elif question.lower() == "switch":
+                    break
+
+                print("Thinking...")
+                try:
+                    answer = ask_ollama(pdf_text, question)
+                    print("\nAnswer:\n", answer)
+                    print("-" * 40)
+                except Exception as e:
+                    print(f"Error getting response: {e}")
+
+        except FileNotFoundError:
+            print(f"Error: PDF '{pdf_name}' not found.")
+        except Exception as e:
+            print(f"Error loading PDF: {e}")
 
 if __name__ == "__main__":
     main()
