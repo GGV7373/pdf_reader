@@ -41,9 +41,9 @@ def main():
 
     while True:
         # Prompt user for a question or command
-        question = input("Write a question (or 'switch' for new PDF, 'exit' to quit): ").strip()
+        question = input("Write a question (or 'switch' for new PDF, 'exit' or 'quit' to exit the program): ").strip()
 
-        if question.lower() == "exit":
+        if question.lower() == "exit" or "quit":
             # Exit the program
             print("Exit....")
             break
