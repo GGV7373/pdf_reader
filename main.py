@@ -1,13 +1,14 @@
+import os
+import time
+import requests
 import subprocess
 import PyPDF2
 from ollama import chat, ChatResponse
-import os
-import requests
 
 def start_ollama_server():
     # Start the Ollama server if it's not already running
     try:
-        response = requests.get("http://localhost:11434/ping", timeout=2)
+        requests.get("http://localhost:11434")
     except requests.RequestException:
         subprocess.Popen(
             ["ollama", "serve"],
@@ -15,8 +16,6 @@ def start_ollama_server():
         )
         time.sleep(5)
 
-    print("Starting Ollama server...")
-    os.system("ollama serve &")
 
 def extract_text_from_pdf(pdf_name: str) -> str:
     # Extract all text from a PDF file given its name (without .pdf extension)
@@ -31,11 +30,12 @@ def extract_text_from_pdf(pdf_name: str) -> str:
     return all_text
 
 def ask_ollama(text: str, question: str) -> str:
+    start_ollama_server()  # Ensure the Ollama server is running
     response: ChatResponse = chat(
         # This is the model name you want to use
 
         model="llama3.2",
-        messages = [
+        messages=[
             {"role": "system", "content": "You are a helpful assistant who reads PDF text and answers questions."},
             {"role": "user", "content": f"{question}\n\n{text}"}
         ],
@@ -46,7 +46,7 @@ def ask_ollama(text: str, question: str) -> str:
 def main():
     # Main function to run the PDF reader and question-answering loop
     print("-"* 10 + "\n")
-    print(" PDF-Reader\n")
+    print("PDF-Reader\n")
     print("-" * 10 + "\n")
 
     # Prompt user for PDF file name (without .pdf extension)
