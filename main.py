@@ -1,5 +1,3 @@
-<<<<<<< HEAD:pdf_ai.py
-=======
 import PyPDF2
 from ollama import chat, ChatResponse
 
@@ -68,4 +66,3 @@ def main():
 
 if __name__ == "__main__":
     main()
->>>>>>> test-branch:main.py
