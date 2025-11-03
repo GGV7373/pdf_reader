@@ -52,7 +52,7 @@ def main():
     # Prompt user for PDF file name (without .pdf extension)
     pdf_name = input("PDF-file (out the .pdf): ").strip()
     pdf_text = extract_text_from_pdf(pdf_name)
-    print("PDF loding..!\n")
+    print("PDF loding..\n")
 
     while True:
         # Prompt user for a question or command
@@ -74,8 +74,9 @@ def main():
             # Ask a question about the current PDF
             print("Thinking…")
             response = ask_ollama(pdf_text, question)
-            
-            print("\nAnswer from LLaMA:\n")
+
+            print("\nAnswer from Ollama:\n")
+            print("\n" + "-" * 40)
             print(response)
             print("\n" + "-" * 40)
 
