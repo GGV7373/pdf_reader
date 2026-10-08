@@ -46,6 +46,19 @@ Made for sensitive PDFs:
 - The page loads nothing from the internet, and questions only go to your local Ollama.
 - Don't set `OLLAMA_HOST` to another machine, or your PDF text will be sent there.
 
+### With Docker
+
+No Python or Ollama install needed, only [Docker](https://www.docker.com/):
+```
+docker compose up -d --build
+docker compose exec ollama ollama pull llama3.2
+```
+The first time, the second command downloads the model (about 2 GB). Then open http://127.0.0.1:5000.  
+Stop it with `docker compose down`. Downloaded models are kept for next time.
+
+The app port is only open to this computer, and Ollama has no open port at all.
+Ollama runs on the CPU in Docker, so answers are slower than with Ollama installed directly.
+
 ## Customizing the AI Model
 
 You can change the AI model by editing the `MODEL` variable in the `main.py` file.  

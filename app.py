@@ -1,4 +1,5 @@
 import io
+import os
 from flask import Flask, Request, Response, jsonify, request, send_file
 from pypdf.errors import PdfReadError
 from ollama import ResponseError
@@ -45,6 +46,7 @@ def ask():
     return Response(generate(), mimetype="text/plain")
 
 if __name__ == "__main__":
-    # 127.0.0.1 means only this computer can open the app, not others on the network
+    # 127.0.0.1 means only this computer can open the app, not others on the network.
+    # Docker sets HOST=0.0.0.0, and compose.yaml keeps the port limited to this computer.
     print("Open http://127.0.0.1:5000 in your browser")
-    app.run(host="127.0.0.1", port=5000)
+    app.run(host=os.environ.get("HOST", "127.0.0.1"), port=5000)
