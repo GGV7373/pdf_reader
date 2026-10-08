@@ -1,4 +1,6 @@
+import sys
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 from ollama import chat, ResponseError
 
 # This is the model name you want to use
@@ -44,15 +46,24 @@ def ask_ollama(messages: list, question: str) -> None:
     print()
     messages.append({"role": "assistant", "content": answer})
 
-def load_pdf(prompt: str) -> list:
+def load_pdf(prompt: str, pdf_name: str = "") -> list:
     # Keep asking until a PDF is loaded, then return a new conversation for it
     while True:
-        pdf_name = input(prompt).strip()
+        pdf_name = pdf_name or input(prompt).strip()
         try:
             text = extract_text_from_pdf(pdf_name)
-        except FileNotFoundError:
-            print(f"Could not find '{pdf_name}'. Try again.\n")
+        except (OSError, PdfReadError) as e:
+            print(f"Could not open '{pdf_name}': {e}\nTry again.\n")
+            pdf_name = ""
             continue
+        if not text.strip():
+            # Scanned PDFs are just images, so there is no text to read
+            print(f"No text found in '{pdf_name}' (is it a scanned PDF?). Try another.\n")
+            pdf_name = ""
+            continue
+        # Roughly 4 characters per token
+        if len(text) / 4 > CONTEXT_SIZE:
+            print("Warning: this PDF is very long, the model may only read part of it (raise CONTEXT_SIZE).")
         print("PDF loaded!\n")
         return start_conversation(text)
 
@@ -62,8 +73,8 @@ def main():
     print(" PDF-Reader\n")
     print("-" * 10 + "\n")
 
-    # Prompt user for PDF file name (without .pdf extension)
-    messages = load_pdf("PDF file (without .pdf): ")
+    # Use the PDF given on the command line (python main.py file.pdf), or ask for one
+    messages = load_pdf("PDF file (without .pdf): ", sys.argv[1] if len(sys.argv) > 1 else "")
 
     while True:
         # Prompt user for a question or command
@@ -86,4 +97,8 @@ def main():
             print("\n" + "-" * 40)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (KeyboardInterrupt, EOFError):
+        # Ctrl+C or Ctrl+Z/Ctrl+D quits without a long error message
+        print("\nExit....")

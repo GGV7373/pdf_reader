@@ -26,7 +26,8 @@ This project allows you to ask questions about the contents of a PDF file using 
    ```
    python main.py
    ```
-3. When prompted, enter the name of your PDF file (without the `.pdf` extension).
+3. When prompted, enter the name of your PDF file (without the `.pdf` extension).  
+   Or open it straight away: `python main.py example.pdf`
 4. Ask questions about the PDF content.  
    - Type `switch` to load a different PDF.
    - Type `exit` to quit the program.
