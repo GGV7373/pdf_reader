@@ -6,7 +6,7 @@ This project allows you to ask questions about the contents of a PDF file using 
 
 - Python 3.8 or newer
 - [Ollama](https://ollama.com/) installed and running on your system
-- The required Python packages: `ollama` and `pypdf`
+- The required Python packages: `ollama`, `pypdf` and `flask`
 
 ## Installation
 
@@ -31,6 +31,20 @@ This project allows you to ask questions about the contents of a PDF file using 
 4. Ask questions about the PDF content.  
    - Type `switch` to load a different PDF.
    - Type `exit` to quit the program.
+
+## Web app (local and private)
+
+Prefer a browser? Run:
+```
+python app.py
+```
+Then open http://127.0.0.1:5000, upload a PDF and ask questions.
+
+Made for sensitive PDFs:
+- The app only listens on `127.0.0.1`, so other computers on the network can't open it.
+- Uploaded PDFs stay in memory and are never saved to disk.
+- The page loads nothing from the internet, and questions only go to your local Ollama.
+- Don't set `OLLAMA_HOST` to another machine, or your PDF text will be sent there.
 
 ## Customizing the AI Model
 
